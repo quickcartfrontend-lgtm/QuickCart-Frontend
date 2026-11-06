@@ -17,7 +17,6 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
   const [user, setUser] = useState(readStoredUser);
 
-  // Step 2 will call these with the AuthResponse from U1/U2.
   const saveSession = useCallback((authResponse) => {
     localStorage.setItem(TOKEN_KEY, authResponse.accessToken);
     localStorage.setItem(USER_KEY, JSON.stringify(authResponse.user));
@@ -25,7 +24,7 @@ export function AuthProvider({ children }) {
     setUser(authResponse.user);
   }, []);
 
-    const login = useCallback(
+  const login = useCallback(
     async (email, password) => {
       const auth = await loginUser({ email: email.trim().toLowerCase(), password });
       saveSession(auth);
@@ -62,10 +61,12 @@ export function AuthProvider({ children }) {
       token,
       isAuthenticated: Boolean(token && user),
       isAdmin: user?.role === 'ADMIN',
+      login,
+      register,
       saveSession,
       logout,
     }),
-    [user, token, saveSession, logout]
+    [user, token, login, register, saveSession, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

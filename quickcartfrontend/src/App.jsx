@@ -5,15 +5,21 @@ import Placeholder from './pages/Placeholder';
 import GuestRoute from './components/GuestRoute';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
-
+import Home from './pages/customer/Home';
+import Cart from './pages/customer/Cart';
+import ProductList from './pages/customer/ProductList';
+import ProductDetail from './pages/customer/ProductDetail';
 export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
         {/* Public */}
-        <Route path="/" element={<Placeholder name="Home" />} />
-        <Route path="/products" element={<Placeholder name="Product list" />} />
-        <Route path="/products/:id" element={<Placeholder name="Product detail" />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/products" element={<ProductList />} />
+        <Route path="/products/:id" element={<ProductDetail />} />
+        {/* <Route path="/" element={<Placeholder name="Home" />} /> */}
+        {/* <Route path="/products" element={<Placeholder name="Product list" />} /> */}
+        {/* <Route path="/products/:id" element={<Placeholder name="Product detail" />} /> */}
         {/* <Route path="/login" element={<Placeholder name="Login" />} /> */}
         {/* <Route path="/register" element={<Placeholder name="Register" />} /> */}
         <Route element={<GuestRoute />}>
@@ -23,7 +29,8 @@ export default function App() {
 
         {/* Customer only */}
         <Route element={<ProtectedRoute role="CUSTOMER" />}>
-          <Route path="/cart" element={<Placeholder name="Cart" />} />
+          <Route path="/cart" element={<Cart />} />
+          {/* <Route path="/cart" element={<Placeholder name="Cart" />} /> */}
           <Route path="/checkout" element={<Placeholder name="Checkout" />} />
           <Route path="/orders" element={<Placeholder name="My orders" />} />
           <Route path="/orders/:id" element={<Placeholder name="Order detail" />} />

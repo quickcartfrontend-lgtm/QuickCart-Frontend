@@ -1,5 +1,4 @@
 import httpClient from './httpClient';
-
 // U1
 export async function registerUser({ fullName, email, password, phone }) {
   const { data } = await httpClient.post('/api/v1/auth/register', {

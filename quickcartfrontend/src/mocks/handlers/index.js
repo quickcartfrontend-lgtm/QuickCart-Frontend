@@ -1,4 +1,6 @@
+// handlers/index.js
 import { authHandlers } from './auth';
+import { catalogHandlers } from './catalog';
+import { cartHandlers } from './cart';
 
-// Each later step appends its handlers here: catalog (Step 3), cart (4), ...
-export const handlers = [...authHandlers];
+export const handlers = [...authHandlers, ...catalogHandlers, ...cartHandlers];
