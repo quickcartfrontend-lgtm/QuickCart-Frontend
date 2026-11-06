@@ -27,3 +27,36 @@ export function validatePhone(value) {
   if (!PHONE_RE.test(value.trim())) return 'Enter a valid 10-digit mobile number.';
   return '';
 }
+const PINCODE_RE = /^[1-9][0-9]{5}$/;
+const within = (v, min, max) => v.length >= min && v.length <= max;
+
+export function validateLabel(value) {
+  return within(value.trim(), 1, 30) ? '' : 'Label must be 1-30 characters.';
+}
+export function validateLine1(value) {
+  return within(value.trim(), 3, 150) ? '' : 'Address line must be 3-150 characters.';
+}
+export function validateLine2(value) {
+  return value.trim().length <= 150 ? '' : 'Line 2 must be at most 150 characters.';
+}
+export function validateCityOrState(value, what) {
+  return within(value.trim(), 2, 60) ? '' : `${what} must be 2-60 characters.`;
+}
+export function validatePincode(value) {
+  return PINCODE_RE.test(value.trim()) ? '' : 'Enter a valid 6-digit pincode.';
+}
+
+// The seven fields shared by saved addresses and (Step 6) the checkout delivery address.
+// Returns { fieldName: message } for the invalid ones only.
+export function validateDeliveryFields(f) {
+  const checks = {
+    recipientName: validateFullName(f.recipientName),
+    phone: validatePhone(f.phone),
+    line1: validateLine1(f.line1),
+    line2: validateLine2(f.line2),
+    city: validateCityOrState(f.city, 'City'),
+    state: validateCityOrState(f.state, 'State'),
+    pincode: validatePincode(f.pincode),
+  };
+  return Object.fromEntries(Object.entries(checks).filter(([, msg]) => msg));
+}

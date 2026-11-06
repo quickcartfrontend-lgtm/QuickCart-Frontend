@@ -9,12 +9,14 @@ import Home from './pages/customer/Home';
 import Cart from './pages/customer/Cart';
 import ProductList from './pages/customer/ProductList';
 import ProductDetail from './pages/customer/ProductDetail';
+import Account from './pages/customer/Account';
 export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
         {/* Public */}
         <Route path="/" element={<Home />} />
+        <Route path="/account" element={<Account />} />
         <Route path="/products" element={<ProductList />} />
         <Route path="/products/:id" element={<ProductDetail />} />
         {/* <Route path="/" element={<Placeholder name="Home" />} /> */}

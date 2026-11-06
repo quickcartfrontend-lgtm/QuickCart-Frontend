@@ -50,6 +50,15 @@ function seed() {
   return {
     nextUserId: 3,
     carts: {}, // userId -> [{ productId, quantity }]  (note: prices are never stored, per contract)
+    nextAddressId: 3,
+    addresses: [
+      { id: 1, userId: 2, label: 'Home', recipientName: 'Asha Rao', phone: '9876543210',
+        line1: '12 MG Road', line2: 'Near Park', city: 'Hyderabad', state: 'Telangana',
+        pincode: '500001', isDefault: true },
+      { id: 2, userId: 2, label: 'Work', recipientName: 'Asha Rao', phone: '9876543210',
+        line1: '4 Cyber Towers', line2: null, city: 'Hyderabad', state: 'Telangana',
+        pincode: '500081', isDefault: false },
+    ],
     users: [
       {
         id: 1, fullName: 'Store Admin', email: 'admin@quickcart.local',
@@ -133,6 +142,30 @@ export const db = {
     const product = state.products.find((p) => p.id === productId);
     if (product) product.active = active;
     save();
+  },
+    findUserById(id) {
+    return state.users.find((u) => u.id === id) || null;
+  },
+  updateUser(id, changes) {
+    const user = state.users.find((u) => u.id === id);
+    if (!user) return null;
+    Object.assign(user, changes);
+    save();
+    return user;
+  },
+
+  // addresses
+  addressesOf(userId) {
+    return state.addresses.filter((a) => a.userId === userId);
+  },
+  saveAddresses(userId, list) {
+    state.addresses = [...state.addresses.filter((a) => a.userId !== userId), ...list];
+    save();
+  },
+  nextAddressId() {
+    const id = state.nextAddressId;
+    state.nextAddressId += 1;
+    return id;
   },
 };
 

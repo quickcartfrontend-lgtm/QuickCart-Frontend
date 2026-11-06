@@ -54,7 +54,16 @@ export function AuthProvider({ children }) {
     setUser(null);
     // CartContext will clear itself when it is added in Step 4.
   }, []);
-
+  // Only the display name may change from the profile screen. Role and id never do.
+  const updateFullName = useCallback(
+    (fullName) => {
+      if (!user) return;
+      const next = { ...user, fullName };
+      localStorage.setItem(USER_KEY, JSON.stringify(next));
+      setUser(next);
+    },
+    [user]
+  );
   const value = useMemo(
     () => ({
       user,
