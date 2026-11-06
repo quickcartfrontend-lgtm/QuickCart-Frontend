@@ -109,3 +109,34 @@ button:disabled { cursor: not-allowed; opacity: 0.6; }
 @media (max-width: 720px) {
   .account-grid, .address-form__grid { grid-template-columns: 1fr; }
 }
+.checkout-layout { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start; }
+.checkout-section { border: 1px solid #e4e7eb; border-radius: 8px; background: #fff; padding: 1rem; margin: 0 0 1rem; }
+.checkout-section legend { font-weight: 700; padding: 0 0.5rem; }
+.radio-card { display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.75rem; margin-bottom: 0.5rem;
+  border: 1px solid #e4e7eb; border-radius: 6px; cursor: pointer; }
+.summary-lines { list-style: none; margin: 0 0 1rem; padding: 0; }
+.summary-lines li { display: flex; justify-content: space-between; gap: 0.5rem; padding: 0.2rem 0; font-size: 0.9rem; }
+.checkout-layout .cart-summary button[type='submit'] { width: 100%; padding: 0.6rem; background: #2f9e44;
+  color: #fff; border: 0; border-radius: 4px; }
+
+.table-scroll { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; background: #fff; }
+.data-table th, .data-table td { text-align: left; padding: 0.6rem 0.75rem; border-bottom: 1px solid #e4e7eb; }
+
+.status { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
+  background: #e4e7eb; color: #323f4b; }
+.status--delivered { background: #e6f4ea; color: #2f9e44; }
+.status--cancelled { background: #fdecec; color: #a12d2d; }
+.status--out_for_delivery { background: #e0f0ff; color: #1864ab; }
+.status--placed, .status--confirmed, .status--packed { background: #fff8e1; color: #8a6d00; }
+
+.timeline { display: flex; list-style: none; margin: 1.25rem 0; padding: 0; gap: 0.5rem; }
+.timeline li { flex: 1; text-align: center; padding: 0.5rem 0.25rem; font-size: 0.85rem; color: #9aa5b1;
+  border-top: 4px solid #e4e7eb; }
+.timeline li.is-done { color: #2f9e44; border-top-color: #2f9e44; }
+.timeline li.is-current { color: #1f2933; font-weight: 700; border-top-color: #2f9e44; }
+.timeline-cancelled { background: #fdecec; color: #a12d2d; padding: 0.75rem; border-radius: 6px; }
+
+.order-detail__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.order-detail__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+@media (max-width: 720px) { .checkout-layout { grid-template-columns: 1fr; } .timeline { flex-direction: column; } }

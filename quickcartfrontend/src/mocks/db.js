@@ -51,6 +51,16 @@ function seed() {
     nextUserId: 3,
     carts: {}, // userId -> [{ productId, quantity }]  (note: prices are never stored, per contract)
     nextAddressId: 3,
+    nextOrderId: 4,
+    orderSeq: 3,
+    orders: [
+      seedOrder(1, '2026-11-01T10:15:30Z', 'DELIVERED', 'MOCK_PAYMENT', 'PAID',
+        [orderLine(5, 'Toned Milk', 28, 2), orderLine(6, 'Curd', 35, 1)], 25),
+      seedOrder(2, '2026-11-03T08:30:00Z', 'OUT_FOR_DELIVERY', 'COD', 'PENDING',
+        [orderLine(9, 'Brown Bread', 45, 2), orderLine(7, 'Eggs', 54, 1)], 25),
+      seedOrder(3, '2026-11-04T18:45:10Z', 'CANCELLED', 'COD', 'PENDING',
+        [orderLine(18, 'Cola', 40, 2)], 25),
+    ],
     addresses: [
       { id: 1, userId: 2, label: 'Home', recipientName: 'Asha Rao', phone: '9876543210',
         line1: '12 MG Road', line2: 'Near Park', city: 'Hyderabad', state: 'Telangana',
@@ -103,6 +113,7 @@ export const db = {
   findUserByEmail(email) {
     return state.users.find((u) => u.email === email) || null;
   },
+  
   addUser({ fullName, email, password, phone }) {
     const user = {
       id: state.nextUserId++, fullName, email, password, phone,
@@ -167,9 +178,60 @@ export const db = {
     state.nextAddressId += 1;
     return id;
   },
+    // orders
+  ordersOf(userId) {
+    return state.orders.filter((o) => o.userId === userId);
+  },
+  findOrder(id) {
+    return state.orders.find((o) => o.id === id) || null;
+  },
+  // like `order_number_seq`: one global sequence, shared by all users
+  reserveOrderIdentity(createdAtIso) {
+    const id = state.nextOrderId;
+    state.nextOrderId += 1;
+    state.orderSeq += 1;
+    return { id, orderNumber: formatOrderNumber(state.orderSeq, createdAtIso) };
+  },
+  addOrder(order) {
+    state.orders.push(order);
+    save();
+  },
+  // dev helper for testing paging: db.addDemoOrders(2, 12)
+  addDemoOrders(userId, count) {
+    for (let i = 0; i < count; i += 1) {
+      const createdAt = new Date(Date.now() - i * 3600000).toISOString();
+      const { id, orderNumber } = this.reserveOrderIdentity(createdAt);
+      state.orders.push({
+        id, orderNumber, userId, status: 'DELIVERED', paymentMethod: 'MOCK_PAYMENT', paymentStatus: 'PAID',
+        subtotal: 49, deliveryFee: 25, total: 74, deliveryAddress: HOME_ADDRESS,
+        items: [orderLine(1, 'Banana', 49, 1)], createdAt, updatedAt: createdAt,
+      });
+    }
+    save();
+  },
 };
 
 export function resetMockDb() {
   state = seed();
   save();
+}
+export function formatOrderNumber(seq, isoDate) {
+  return `QC${isoDate.slice(0, 10).replace(/-/g, '')}-${String(seq).padStart(6, '0')}`;
+}
+
+const HOME_ADDRESS = {
+  recipientName: 'Asha Rao', phone: '9876543210', line1: '12 MG Road', line2: 'Near Park',
+  city: 'Hyderabad', state: 'Telangana', pincode: '500001',
+};
+const orderLine = (productId, productName, unitPrice, quantity) => ({
+  productId, productName, unitPrice, quantity, lineTotal: unitPrice * quantity,
+});
+
+function seedOrder(id, createdAt, status, paymentMethod, paymentStatus, items, deliveryFee) {
+  const subtotal = items.reduce((sum, i) => sum + i.lineTotal, 0);
+  return {
+    id, orderNumber: formatOrderNumber(id, createdAt), userId: 2, status, paymentMethod, paymentStatus,
+    subtotal, deliveryFee, total: subtotal + deliveryFee, deliveryAddress: HOME_ADDRESS,
+    items, createdAt, updatedAt: createdAt,
+  };
 }

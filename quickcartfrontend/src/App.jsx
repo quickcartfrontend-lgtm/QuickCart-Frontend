@@ -10,6 +10,9 @@ import Cart from './pages/customer/Cart';
 import ProductList from './pages/customer/ProductList';
 import ProductDetail from './pages/customer/ProductDetail';
 import Account from './pages/customer/Account';
+import Checkout from './pages/customer/Checkout';
+import Orders from './pages/customer/Orders';
+import OrderDetail from './pages/customer/OrderDetail';
 export default function App() {
   return (
     <Routes>
@@ -32,10 +35,13 @@ export default function App() {
         {/* Customer only */}
         <Route element={<ProtectedRoute role="CUSTOMER" />}>
           <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/orders/:id" element={<OrderDetail />} />
           {/* <Route path="/cart" element={<Placeholder name="Cart" />} /> */}
-          <Route path="/checkout" element={<Placeholder name="Checkout" />} />
-          <Route path="/orders" element={<Placeholder name="My orders" />} />
-          <Route path="/orders/:id" element={<Placeholder name="Order detail" />} />
+          {/* <Route path="/checkout" element={<Placeholder name="Checkout" />} /> */}
+          {/* <Route path="/orders" element={<Placeholder name="My orders" />} /> */}
+          {/* <Route path="/orders/:id" element={<Placeholder name="Order detail" />} /> */}
           <Route path="/account" element={<Placeholder name="Account" />} />
         </Route>
 

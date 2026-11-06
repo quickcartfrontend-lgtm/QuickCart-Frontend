@@ -13,7 +13,7 @@ export default function Cart() {
   const { cart, loading, error, reloadCart, setQuantity, removeItem, clear } = useCart();
   const { busy, run } = useSubmitLock(); // one lock for the whole page: every control waits
   const [actionError, setActionError] = useState('');
-
+  const { state } = useLocation();
   const perform = (task) =>
     run(async () => {
       setActionError('');
@@ -42,6 +42,7 @@ export default function Cart() {
   return (
     <section>
       <h2>Your cart</h2>
+      <ErrorBanner message={state?.notice} />
       <ErrorBanner message={actionError} />
       {error && <ErrorBanner message={error.message} onRetry={reloadCart} />}
 
