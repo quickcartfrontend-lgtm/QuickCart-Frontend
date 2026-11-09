@@ -1,6 +1,30 @@
 // Temporary dev database. Persisted in localStorage so data survives refresh.
 const DB_KEY = 'quickcart.mockdb';
 
+// ---- Helpers used while building the seed data.
+// They must stay ABOVE `let state = load()` below, because that line runs at import time. ----
+export function formatOrderNumber(seq, isoDate) {
+  return `QC${isoDate.slice(0, 10).replace(/-/g, '')}-${String(seq).padStart(6, '0')}`;
+}
+
+const HOME_ADDRESS = {
+  recipientName: 'Asha Rao', phone: '9876543210', line1: '12 MG Road', line2: 'Near Park',
+  city: 'Hyderabad', state: 'Telangana', pincode: '500001',
+};
+
+const orderLine = (productId, productName, unitPrice, quantity) => ({
+  productId, productName, unitPrice, quantity, lineTotal: unitPrice * quantity,
+});
+
+function seedOrder(id, createdAt, status, paymentMethod, paymentStatus, items, deliveryFee) {
+  const subtotal = items.reduce((sum, i) => sum + i.lineTotal, 0);
+  return {
+    id, orderNumber: formatOrderNumber(id, createdAt), userId: 2, status, paymentMethod, paymentStatus,
+    subtotal, deliveryFee, total: subtotal + deliveryFee, deliveryAddress: HOME_ADDRESS,
+    items, createdAt, updatedAt: createdAt,
+  };
+}
+
 // [id, name, description, active]
 const CATEGORY_ROWS = [
   [1, 'Fruits & Vegetables', 'Fresh fruits and vegetables', true],
@@ -42,7 +66,6 @@ const INACTIVE_PRODUCT_IDS = [20]; // Mineral Water hidden from customers
 
 function seed() {
   const now = new Date().toISOString();
-  
   const products = PRODUCT_ROWS.map(([categoryId, name, description, unit, price], i) => ({
     id: i + 1, categoryId, name, description, price, unit,
     imageUrl: null, active: !INACTIVE_PRODUCT_IDS.includes(i + 1),
@@ -53,6 +76,9 @@ function seed() {
     nextAddressId: 3,
     nextOrderId: 4,
     orderSeq: 3,
+    nextCategoryId: 7,
+    nextProductId: 21,
+    inventoryUpdated: {}, // productId -> ISO time of the last stock change
     orders: [
       seedOrder(1, '2026-11-01T10:15:30Z', 'DELIVERED', 'MOCK_PAYMENT', 'PAID',
         [orderLine(5, 'Toned Milk', 28, 2), orderLine(6, 'Curd', 35, 1)], 25),
@@ -90,7 +116,7 @@ function seed() {
 }
 
 // Like a Flyway migration: data saved by an older version of the mock keeps what it has
-// (users) and gains whatever is new (catalog).
+// (users, orders...) and gains whatever is new.
 function load() {
   const base = seed();
   try {
@@ -113,7 +139,9 @@ export const db = {
   findUserByEmail(email) {
     return state.users.find((u) => u.email === email) || null;
   },
-  
+  findUserById(id) {
+    return state.users.find((u) => u.id === id) || null;
+  },
   addUser({ fullName, email, password, phone }) {
     const user = {
       id: state.nextUserId++, fullName, email, password, phone,
@@ -124,8 +152,54 @@ export const db = {
     save();
     return user;
   },
+  updateUser(id, changes) {
+    const user = state.users.find((u) => u.id === id);
+    if (!user) return null;
+    Object.assign(user, changes);
+    save();
+    return user;
+  },
 
-  // catalog (read-only for now; admin handlers will write in Step 8)
+  // catalog (read-only for now; Step 8 admin handlers will write here)
+  inventoryUpdatedAt(productId) {
+    return state.inventoryUpdated[productId] ?? null;
+  },
+  addCategory({ name, description, imageUrl }) {
+    const now = new Date().toISOString();
+    const category = {
+      id: state.nextCategoryId, name, description, imageUrl, active: true, createdAt: now, updatedAt: now,
+    };
+    state.nextCategoryId += 1;
+    state.categories.push(category);
+    save();
+    return category;
+  },
+  updateCategory(id, changes) {
+    const category = state.categories.find((c) => c.id === id);
+    if (!category) return null;
+    Object.assign(category, changes, { updatedAt: new Date().toISOString() });
+    save();
+    return category;
+  },
+  addProduct(fields, initialQuantity) {
+    const now = new Date().toISOString();
+    const product = {
+      id: state.nextProductId, ...fields, active: true, createdAt: now, updatedAt: now,
+    };
+    state.nextProductId += 1;
+    state.products.push(product);
+    state.inventory[product.id] = initialQuantity;
+    state.inventoryUpdated[product.id] = now;
+    save();
+    return product;
+  },
+  updateProduct(id, changes) {
+    const product = state.products.find((p) => p.id === id);
+    if (!product) return null;
+    Object.assign(product, changes, { updatedAt: new Date().toISOString() });
+    save();
+    return product;
+  },
   categories() {
     return state.categories;
   },
@@ -135,18 +209,14 @@ export const db = {
   stock(productId) {
     return state.inventory[productId] ?? 0;
   },
-    // cart (stores only productId + quantity, like cart_items in the contract)
-  cartItems(userId) {
-    return state.carts[userId] ?? [];
-  },
-  saveCartItems(userId, items) {
-    state.carts[userId] = items;
-    save();
-  },
-
   // dev helpers for testing unavailable lines (see browser.js); Step 8 admin handlers will reuse them
+  // setStock(productId, quantity) {
+  //   state.inventory[productId] = quantity;
+  //   save();
+  // },
   setStock(productId, quantity) {
     state.inventory[productId] = quantity;
+    state.inventoryUpdated[productId] = new Date().toISOString();
     save();
   },
   setProductActive(productId, active) {
@@ -154,15 +224,14 @@ export const db = {
     if (product) product.active = active;
     save();
   },
-    findUserById(id) {
-    return state.users.find((u) => u.id === id) || null;
+
+  // cart (stores only productId + quantity, like cart_items in the contract)
+  cartItems(userId) {
+    return state.carts[userId] ?? [];
   },
-  updateUser(id, changes) {
-    const user = state.users.find((u) => u.id === id);
-    if (!user) return null;
-    Object.assign(user, changes);
+  saveCartItems(userId, items) {
+    state.carts[userId] = items;
     save();
-    return user;
   },
 
   // addresses
@@ -178,12 +247,23 @@ export const db = {
     state.nextAddressId += 1;
     return id;
   },
-    // orders
+
+  // orders
+  allOrders() {
+    return state.orders;
+  },
   ordersOf(userId) {
     return state.orders.filter((o) => o.userId === userId);
   },
   findOrder(id) {
     return state.orders.find((o) => o.id === id) || null;
+  },
+  updateOrder(id, changes) {
+    const order = state.orders.find((o) => o.id === id);
+    if (!order) return null;
+    Object.assign(order, changes);
+    save();
+    return order;
   },
   // like `order_number_seq`: one global sequence, shared by all users
   reserveOrderIdentity(createdAtIso) {
@@ -214,24 +294,4 @@ export const db = {
 export function resetMockDb() {
   state = seed();
   save();
-}
-export function formatOrderNumber(seq, isoDate) {
-  return `QC${isoDate.slice(0, 10).replace(/-/g, '')}-${String(seq).padStart(6, '0')}`;
-}
-
-const HOME_ADDRESS = {
-  recipientName: 'Asha Rao', phone: '9876543210', line1: '12 MG Road', line2: 'Near Park',
-  city: 'Hyderabad', state: 'Telangana', pincode: '500001',
-};
-const orderLine = (productId, productName, unitPrice, quantity) => ({
-  productId, productName, unitPrice, quantity, lineTotal: unitPrice * quantity,
-});
-
-function seedOrder(id, createdAt, status, paymentMethod, paymentStatus, items, deliveryFee) {
-  const subtotal = items.reduce((sum, i) => sum + i.lineTotal, 0);
-  return {
-    id, orderNumber: formatOrderNumber(id, createdAt), userId: 2, status, paymentMethod, paymentStatus,
-    subtotal, deliveryFee, total: subtotal + deliveryFee, deliveryAddress: HOME_ADDRESS,
-    items, createdAt, updatedAt: createdAt,
-  };
 }

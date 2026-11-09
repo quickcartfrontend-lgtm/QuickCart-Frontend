@@ -2,11 +2,12 @@ import { Link, useLocation, useParams } from 'react-router-dom';
 import { getOrder } from '../../api/orderApi';
 import useFetch from '../../utils/useFetch';
 import { formatDateTime } from '../../utils/formatDate';
-import { formatPrice } from '../../utils/formatPrice';
-import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '../../utils/orderLabels';
+// import { formatPrice } from '../../utils/formatPrice';
+// import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '../../utils/orderLabels';
 import Loader from '../../components/Loader';
 import ErrorBanner from '../../components/ErrorBanner';
 import EmptyState from '../../components/EmptyState';
+import OrderBody from '../../components/OrderBody';
 import OrderStatusBadge from '../../components/OrderStatusBadge';
 import OrderTimeline from '../../components/OrderTimeline';
 
@@ -31,7 +32,7 @@ function OrderDetailContent({ id }) {
   }
   if (!order) return null;
 
-  const a = order.deliveryAddress;
+  // const a = order.deliveryAddress;
 
   return (
     <article className="order-detail">
@@ -48,8 +49,9 @@ function OrderDetailContent({ id }) {
       </header>
 
       <OrderTimeline status={order.status} />
+      <OrderBody order={order} />
 
-      <div className="table-scroll">
+      {/* <div className="table-scroll">
         <table className="data-table" aria-label="Items in this order">
           <thead>
             <tr>
@@ -70,9 +72,9 @@ function OrderDetailContent({ id }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </div> */}
 
-      <div className="order-detail__grid">
+      {/* <div className="order-detail__grid">
         <section>
           <h3>Delivery address</h3>
           <p>{a.recipientName} · {a.phone}</p>
@@ -94,7 +96,7 @@ function OrderDetailContent({ id }) {
             <div className="cart-summary__total"><dt>Total</dt><dd>{formatPrice(order.total)}</dd></div>
           </dl>
         </section>
-      </div>
+      </div> */}
     </article>
   );
 }

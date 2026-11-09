@@ -60,3 +60,32 @@ export function validateDeliveryFields(f) {
   };
   return Object.fromEntries(Object.entries(checks).filter(([, msg]) => msg));
 }
+export function validateCategoryName(value) {
+  return within(value.trim(), 2, 80) ? '' : 'Name must be 2-80 characters.';
+}
+export function validateMaxLength(value, max, what) {
+  return value.trim().length <= max ? '' : `${what} must be at most ${max} characters.`;
+}
+export function validateProductName(value) {
+  return within(value.trim(), 2, 150) ? '' : 'Name must be 2-150 characters.';
+}
+export function validateUnit(value) {
+  return within(value.trim(), 1, 30) ? '' : 'Unit must be 1-30 characters.';
+}
+
+// Price is validated as TEXT: up to 5 whole digits, at most 2 decimals, not zero.
+// That already guarantees 0 < price <= 99999.99, with no floating-point maths (Mandate 1).
+export function validatePrice(value) {
+  const t = value.trim();
+  if (!/^\d{1,5}(\.\d{1,2})?$/.test(t) || !/[1-9]/.test(t)) {
+    return 'Enter a price above 0, up to 99999.99, with at most 2 decimals.';
+  }
+  return '';
+}
+
+export function validateQuantity(value) {
+  const t = value.trim();
+  return /^\d{1,6}$/.test(t) && Number(t) <= 100000
+    ? ''
+    : 'Quantity must be a whole number from 0 to 100000.';
+}

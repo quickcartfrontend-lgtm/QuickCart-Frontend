@@ -8,6 +8,7 @@ import Loader from '../../components/Loader';
 import ErrorBanner from '../../components/ErrorBanner';
 import EmptyState from '../../components/EmptyState';
 import CartLine from '../../components/CartLine';
+import { useLocation } from 'react-router-dom';
 
 export default function Cart() {
   const { cart, loading, error, reloadCart, setQuantity, removeItem, clear } = useCart();

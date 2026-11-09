@@ -38,7 +38,7 @@ function validatePlaceOrder(b) {
   return d;
 }
 
-const toOrder = (o) => ({
+export const toOrder = (o) => ({
   id: o.id, orderNumber: o.orderNumber, status: o.status,
   paymentMethod: o.paymentMethod, paymentStatus: o.paymentStatus,
   subtotal: o.subtotal, deliveryFee: o.deliveryFee, total: o.total,
@@ -52,7 +52,7 @@ const toSummary = (o) => ({
   itemCount: o.items.reduce((sum, i) => sum + i.quantity, 0), createdAt: o.createdAt,
 });
 
-function intParam(value, fallback) {
+export function intParam(value, fallback) {
   if (value === null) return fallback;
   return /^-?\d+$/.test(value) ? Number(value) : NaN;
 }

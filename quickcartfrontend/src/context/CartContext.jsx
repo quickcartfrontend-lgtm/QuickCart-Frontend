@@ -30,6 +30,7 @@ function CartState({ children }) {
   const [error, setError] = useState(null);
   const queue = useRef(Promise.resolve());
 
+  // Quiet refresh: keeps whatever is on screen, updates it when the answer arrives (O1).
   const refreshCart = useCallback(async () => {
     try {
       setCart(await getCart());
@@ -45,6 +46,7 @@ function CartState({ children }) {
     if (enabled) refreshCart();
   }, [enabled, refreshCart]);
 
+  // Loud reload: used by Retry buttons, shows the spinner again.
   const reloadCart = useCallback(() => {
     setError(null);
     setLoading(true);
@@ -73,23 +75,40 @@ function CartState({ children }) {
     [refreshCart]
   );
 
-  const addItem = useCallback((productId, quantity) => mutate(() => addCartItem(productId, quantity)), [mutate]);
-  const setQuantity = useCallback((productId, quantity) => mutate(() => setCartItemQuantity(productId, quantity)), [mutate]);
-  const removeItem = useCallback((productId) => mutate(() => removeCartItem(productId)), [mutate]);
+  const addItem = useCallback(
+    (productId, quantity) => mutate(() => addCartItem(productId, quantity)),
+    [mutate]
+  );
+  const setQuantity = useCallback(
+    (productId, quantity) => mutate(() => setCartItemQuantity(productId, quantity)),
+    [mutate]
+  );
+  const removeItem = useCallback(
+    (productId) => mutate(() => removeCartItem(productId)),
+    [mutate]
+  );
   const clear = useCallback(
     () => mutate(async () => { await clearCart(); return EMPTY_CART; }), // Mandate 3: O5 => empty locally
     [mutate]
   );
-  // For Step 6: after a successful order the cart is empty. No re-fetch.
+  // After a successful order the cart is empty. No re-fetch (Mandate 3).
   const resetCart = useCallback(() => setCart(EMPTY_CART), []);
 
   const value = useMemo(
     () => ({
-      cart, loading, error,
+      cart,
+      loading,
+      error,
       itemCount: cart?.itemCount ?? 0,
-      reloadCart, addItem, setQuantity, removeItem, clear, resetCart,
+      reloadCart,
+      refreshCart, // <- the missing one: Checkout calls it on entry
+      addItem,
+      setQuantity,
+      removeItem,
+      clear,
+      resetCart,
     }),
-    [cart, loading, error, reloadCart, addItem, setQuantity, removeItem, clear, resetCart]
+    [cart, loading, error, reloadCart, refreshCart, addItem, setQuantity, removeItem, clear, resetCart]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

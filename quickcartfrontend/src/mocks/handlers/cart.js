@@ -30,7 +30,7 @@ function toLine(item) {
   };
 }
 
-function buildCart(userId) {
+export function buildCart(userId) {
   const items = db.cartItems(userId).map(toLine);
   const purchasable = items.filter((l) => l.available);
   const subtotal = round2(purchasable.reduce((sum, l) => sum + l.lineTotal, 0));
