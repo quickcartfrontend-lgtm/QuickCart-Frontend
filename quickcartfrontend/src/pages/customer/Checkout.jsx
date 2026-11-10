@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import useFetch from '../../utils/useFetch';
 import useSubmitLock from '../../utils/useSubmitLock';
-import { messageWithDetails, parseApiError } from '../../utils/errorMessage';
+import { parseApiError } from '../../utils/errorMessage';
 import { formatPrice } from '../../utils/formatPrice';
 import { validateDeliveryFields, validateLabel } from '../../utils/validators';
 import { PAYMENT_METHOD_LABELS } from '../../utils/orderLabels';

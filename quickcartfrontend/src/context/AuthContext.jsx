@@ -47,13 +47,15 @@ export function AuthProvider({ children }) {
     [saveSession]
   );
 
+  // Logout is client-only (contract 10.2). CartProvider is keyed by the user id,
+  // so it discards the cart by itself as soon as `user` becomes null.
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     setToken(null);
     setUser(null);
-    // CartContext will clear itself when it is added in Step 4.
   }, []);
+
   // Only the display name may change from the profile screen. Role and id never do.
   const updateFullName = useCallback(
     (fullName) => {
@@ -64,6 +66,7 @@ export function AuthProvider({ children }) {
     },
     [user]
   );
+
   const value = useMemo(
     () => ({
       user,
@@ -74,13 +77,15 @@ export function AuthProvider({ children }) {
       register,
       saveSession,
       logout,
+      updateFullName, // <- was missing: ProfileForm calls it after a successful save
     }),
-    [user, token, login, register, saveSession, logout]
+    [user, token, login, register, saveSession, logout, updateFullName]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- the hook deliberately lives next to its provider
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');

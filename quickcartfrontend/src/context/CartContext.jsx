@@ -10,7 +10,8 @@ import { useAuth } from './AuthContext';
 const CartContext = createContext(null);
 
 // Contract: after O5 / after placing an order, show an empty cart locally.
-export const EMPTY_CART = {
+// (Not exported: only this file needs it, and a file that exports components should export only components.)
+const EMPTY_CART = {
   items: [], itemCount: 0, subtotal: 0, deliveryFee: 0, total: 0, hasUnavailableItems: false,
 };
 
@@ -30,7 +31,32 @@ function CartState({ children }) {
   const [error, setError] = useState(null);
   const queue = useRef(Promise.resolve());
 
+  // First load. The effect starts the request itself and only sets state when the answer
+  // arrives (inside the promise callbacks), which is what the lint rule wants to see.
+  useEffect(() => {
+    if (!enabled) return undefined;
+
+    let cancelled = false; // ignore answers that arrive after this cart was discarded
+    getCart()
+      .then((next) => {
+        if (cancelled) return;
+        setCart(next);
+        setError(null);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(parseApiError(err));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled]);
+
   // Quiet refresh: keeps whatever is on screen, updates it when the answer arrives (O1).
+  // Used by Retry, by Checkout on entry, and after stock conflicts.
   const refreshCart = useCallback(async () => {
     try {
       setCart(await getCart());
@@ -41,10 +67,6 @@ function CartState({ children }) {
       setLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    if (enabled) refreshCart();
-  }, [enabled, refreshCart]);
 
   // Loud reload: used by Retry buttons, shows the spinner again.
   const reloadCart = useCallback(() => {
@@ -101,7 +123,7 @@ function CartState({ children }) {
       error,
       itemCount: cart?.itemCount ?? 0,
       reloadCart,
-      refreshCart, // <- the missing one: Checkout calls it on entry
+      refreshCart, // Checkout calls it quietly on entry
       addItem,
       setQuantity,
       removeItem,
@@ -114,6 +136,7 @@ function CartState({ children }) {
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- the hook deliberately lives next to its provider
 export function useCart() {
   const ctx = useContext(CartContext);
   if (!ctx) throw new Error('useCart must be used inside <CartProvider>');
